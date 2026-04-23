@@ -37,3 +37,6 @@ The top of the `BonusChest.lua` file contains a configuration table. Below is a 
 
 ## Testing
 If ENABLE_CHAT_COMMAND is set to true, type 'bagtest' in the in-game chat to simulate a loot drop based on your current stats without needing the physical item.
+
+Optional: Smaller Bag o' Goods (Questing Tier)
+The SmallBag.lua script provides a secondary, lower-tier loot system designed for the leveling experience. Unlike the main bag, this is awarded automatically through questing rather than dungeons
