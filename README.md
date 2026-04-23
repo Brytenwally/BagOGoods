@@ -12,11 +12,11 @@ Instead of using static loot tables that require manual updating, this script "s
 
 ## Installation
 1. Setup the Database: I have provided a specific SQL query below. You must run this in your acore_world database to ensure the bag item exists and functions correctly.
-2. Script Installation: Copy BonusChest.lua into your server's lua_scripts folder.
+2. Script Installation: Copy BagOGoods.lua into your server's lua_scripts folder.
 3. Reload: Restart your server or type .reload eluna in-game.
 
 ## Configuration Options
-The top of the `BonusChest.lua` file contains a configuration table. Below is a detailed breakdown of how these settings affect the loot logic:
+The top of the `BagOGoods.lua` file contains a configuration table. Below is a detailed breakdown of how these settings affect the loot logic:
 
 ### Loot Quality & Types
 * **MIN_QUALITY / MAX_QUALITY**: Restricts the search results by rarity. Setting both to 4 will ensure players only ever receive Epics.
@@ -38,5 +38,5 @@ The top of the `BonusChest.lua` file contains a configuration table. Below is a 
 ## Testing
 If ENABLE_CHAT_COMMAND is set to true, type 'bagtest' in the in-game chat to simulate a loot drop based on your current stats without needing the physical item.
 
-Optional: Smaller Bag o' Goods (Questing Tier)
-The SmallBag.lua script provides a secondary, lower-tier loot system designed for the leveling experience. Unlike the main bag, this is awarded automatically through questing rather than dungeons
+## Optional: Smaller Bag o' Goods (Questing Tier)
+The SmallBagOGoods.lua script provides a secondary, lower-tier loot system designed for the leveling experience. Unlike the main bag, this is awarded automatically through questing rather than dungeons
