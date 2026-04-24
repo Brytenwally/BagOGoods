@@ -60,16 +60,31 @@ end
 -- EVENT HANDLERS
 -- ============================================================================
 
--- Distribute Bag on Quest Completion
-local function OnQuestReward_SmallBag(event, player, quest)
+local function OnQuestComplete_SmallBag(event, player, quest)
     local pLvl = player:GetLevel()
+    
+    -- Level check from your config
     if pLvl >= SMALL_BAG_CONFIG.MIN_LEVEL and pLvl <= SMALL_BAG_CONFIG.MAX_LEVEL then
+        -- 100% chance for your current test
         if math.random(1, 100) <= SMALL_BAG_CONFIG.REWARD_CHANCE then
             player:AddItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
             player:SendAreaTriggerMessage("|cff00ccffBonus: Smaller Bag o' Goods!|r")
+            player:SendBroadcastMessage("You finished: " .. quest:GetTitle() .. ". Here is your bonus bag!")
         end
     end
 end
+
+-- ============================================================================
+-- REGISTRATION
+-- ============================================================================
+-- Event 54: PLAYER_EVENT_ON_COMPLETE_QUEST
+-- This ensures the bag is a reward for finishing the quest.
+RegisterPlayerEvent(54, OnQuestComplete_SmallBag) 
+
+-- Event 5: PLAYER_EVENT_ON_SPELL_CAST
+RegisterPlayerEvent(5, OnSmallBagCast)
+
+print(">> Smaller Bag System: Loaded (Completion Reward Tier).")
 
 -- Process Loot Opening
 local function SmallBag_ProcessLoot(eventId, delay, calls, player)
@@ -101,7 +116,11 @@ end
 -- ============================================================================
 -- REGISTRATION
 -- ============================================================================
-RegisterPlayerEvent(28, OnQuestReward_SmallBag) -- Quest Reward
-RegisterPlayerEvent(5, OnSmallBagCast)          -- Spell Cast
+-- Event 54: PLAYER_EVENT_ON_COMPLETE_QUEST
+-- This ensures the bag is a reward for finishing the quest.
+RegisterPlayerEvent(54, OnQuestComplete_SmallBag) 
 
-print(">> Smaller Bag System: Loaded (Questing Tier).")
+-- Event 5: PLAYER_EVENT_ON_SPELL_CAST
+RegisterPlayerEvent(5, OnSmallBagCast)
+
+print(">> Smaller Bag System: Loaded (Completion Reward Tier).")
