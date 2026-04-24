@@ -68,10 +68,10 @@ local function FindSingleItem(player)
     local pLevel = player:GetLevel()
     local targetIlvl = CONFIG.MAX_ILEVEL_CAP
     
-    -- SAFETY GATE 1: Exclude Epics for players level 20 and below
+    -- SAFETY GATE 1: Exclude Epics and Rares for players level 20 and below
     local effectiveMaxQuality = CONFIG.MAX_QUALITY
     if pLevel <= 20 and effectiveMaxQuality > 3 then
-        effectiveMaxQuality = 3 
+        effectiveMaxQuality = 2 
     end
     
     -- SAFETY GATE 2: Disable scaling logic up to level 30
