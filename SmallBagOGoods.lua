@@ -6,27 +6,27 @@ local SMALL_BAG_CONFIG = {
     SPELL_ID_OPEN       = 36311, 
     
     -- GIVER SETTINGS
-    REWARD_CHANCE       = 50,    -- 50% chance on quest complete
+    REWARD_CHANCE       = 50,    -- 100% chance for testing
     MIN_LEVEL           = 15,    
     MAX_LEVEL           = 80,    
 
     -- LOOT QUALITY
     MIN_QUALITY         = 2,     -- Green
-    MAX_QUALITY         = 3,     -- Rare (Blue) - Maxed at blue to keep Big Bag superior
+    MAX_QUALITY         = 3,     -- Rare (Blue)
     
     -- VARIETY SETTINGS
-    LEVEL_RANGE         = 15,    -- Wider range = more random/less "perfect"
-    RANDOM_POOL_SIZE    = 15,    -- 1 out of 15 items, making upgrades harder to target
+    LEVEL_RANGE         = 15,    
+    RANDOM_POOL_SIZE    = 15,    
     
     -- POWER SETTINGS
-    USE_AVG_ILVL_BOOST  = false, -- Small bags don't scale with equipped gear
+    USE_AVG_ILVL_BOOST  = false, 
     MAX_ILEVEL_CAP      = 232,   
 }
 
 math.randomseed(os.time())
 
 -- ============================================================================
--- INTERNAL ENGINE
+-- INTERNAL ENGINE: LOOT FINDER
 -- ============================================================================
 
 local function SmallBag_FindItem(player)
@@ -36,9 +36,13 @@ local function SmallBag_FindItem(player)
     -- Spec detection for basic stats
     local statFilter = ""
     local str, agi, int = player:GetStat(0), player:GetStat(1), player:GetStat(3)
-    if int > str and int > agi then statFilter = "AND (stat_type1 = 5 OR stat_type2 = 5)"
-    elseif agi > str then statFilter = "AND (stat_type1 = 3 OR stat_type2 = 3)"
-    else statFilter = "AND (stat_type1 = 4 OR stat_type2 = 4)" end
+    if int > str and int > agi then 
+        statFilter = "AND (stat_type1 = 5 OR stat_type2 = 5)"
+    elseif agi > str then 
+        statFilter = "AND (stat_type1 = 3 OR stat_type2 = 3)"
+    else 
+        statFilter = "AND (stat_type1 = 4 OR stat_type2 = 4)" 
+    end
 
     local query = string.format([[
         SELECT entry FROM item_template WHERE RequiredLevel <= %d AND RequiredLevel >= %d
@@ -60,55 +64,37 @@ end
 -- EVENT HANDLERS
 -- ============================================================================
 
-local function OnQuestComplete_SmallBag(event, player, quest)
-    local pLvl = player:GetLevel()
-    
-    -- Level check from your config
-    if pLvl >= SMALL_BAG_CONFIG.MIN_LEVEL and pLvl <= SMALL_BAG_CONFIG.MAX_LEVEL then
-        -- 100% chance for your current test
-        if math.random(1, 100) <= SMALL_BAG_CONFIG.REWARD_CHANCE then
-            player:AddItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
-            player:SendAreaTriggerMessage("|cff00ccffBonus: Smaller Bag o' Goods!|r")
-            player:SendBroadcastMessage("You finished: " .. quest:GetTitle() .. ". Here is your bonus bag!")
-        end
-    end
-end
-
--- ============================================================================
--- REGISTRATION
--- ============================================================================
--- Event 54: PLAYER_EVENT_ON_COMPLETE_QUEST
--- This ensures the bag is a reward for finishing the quest.
-RegisterPlayerEvent(54, OnQuestComplete_SmallBag) 
-
--- Event 5: PLAYER_EVENT_ON_SPELL_CAST
-RegisterPlayerEvent(5, OnSmallBagCast)
-
-print(">> Smaller Bag System: Loaded (Completion Reward Tier).")
-
--- Process Loot Opening
+-- Function 1: Logic for opening the bag
 local function SmallBag_ProcessLoot(eventId, delay, calls, player)
     if not player or not player:IsInWorld() then return end
     
-    -- Final safety: ensure the player still has the SMALL bag
     if player:HasItem(SMALL_BAG_CONFIG.ITEM_ID_BAG) then
-        player:RemoveItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
-        
         local entry = SmallBag_FindItem(player)
         if entry then
+            player:RemoveItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
             player:AddItem(entry, 1)
             player:SendBroadcastMessage("Small Bag contained: " .. GetItemLink(entry))
         end
     end
 end
 
--- Hook into Spell Cast
+-- Function 2: Logic for casting the "Opening" spell
 local function OnSmallBagCast(event, player, spell, skipCheck)
     if spell:GetEntry() == SMALL_BAG_CONFIG.SPELL_ID_OPEN then
-        -- We only register the event if the player is holding the SMALL bag.
-        -- This prevents the Small Bag logic from firing when opening a Big Bag.
         if player:HasItem(SMALL_BAG_CONFIG.ITEM_ID_BAG) then
             player:RegisterEvent(SmallBag_ProcessLoot, 150, 1)
+        end
+    end
+end
+
+-- Function 3: Logic for receiving the bag on Quest Completion
+local function OnQuestComplete_SmallBag(event, player, quest)
+    local pLvl = player:GetLevel()
+    
+    if pLvl >= SMALL_BAG_CONFIG.MIN_LEVEL and pLvl <= SMALL_BAG_CONFIG.MAX_LEVEL then
+        if math.random(1, 100) <= SMALL_BAG_CONFIG.REWARD_CHANCE then
+            player:AddItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
+            player:SendAreaTriggerMessage("|cff00ccffBonus: Smaller Bag o' Goods!|r")
         end
     end
 end
@@ -116,11 +102,11 @@ end
 -- ============================================================================
 -- REGISTRATION
 -- ============================================================================
--- Event 54: PLAYER_EVENT_ON_COMPLETE_QUEST
--- This ensures the bag is a reward for finishing the quest.
+
+-- Hook into Quest Completion (Event 54)
 RegisterPlayerEvent(54, OnQuestComplete_SmallBag) 
 
--- Event 5: PLAYER_EVENT_ON_SPELL_CAST
-RegisterPlayerEvent(5, OnSmallBagCast)
+-- Hook into Spell Casting (Event 5)
+RegisterPlayerEvent(5, OnSmallBagCast) 
 
-print(">> Smaller Bag System: Loaded (Completion Reward Tier).")
+print(">> Smaller Bag System: Completely Recreated & Loaded.")
