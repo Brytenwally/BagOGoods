@@ -90,6 +90,11 @@ local function FindSingleItem(player)
         targetIlvl = math.min(CONFIG.MAX_ILEVEL_CAP, math.floor(avg * CONFIG.ILVL_MULTIPLIER))
     end
 
+    local resilienceFilter = ""
+    if not CONFIG.ALLOW_RESILIENCE then
+        resilienceFilter = "AND 35 NOT IN (stat_type1, stat_type2, stat_type3, stat_type4, stat_type5, stat_type6, stat_type7, stat_type8, stat_type9, stat_type10)"
+    end
+    
     -- RETRY LOOP: Up to 5 attempts to find a valid slot
     for attempt = 1, 5 do
         local categories = {}
