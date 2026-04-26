@@ -146,6 +146,19 @@ local function DoTheBagLoot(eventId, delay, calls, player)
     -- 1. Try to find the item first
     local entry = FindSingleItem(player)
 
+    if #itemsToGive > 0 then
+        if player:HasItem(CONFIG.ITEM_ID_BAG) then
+            player:RemoveItem(CONFIG.ITEM_ID_BAG, 1)
+            for _, entry in ipairs(itemsToGive) do
+                player:AddItem(entry, 1)
+                player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
+            end
+            player:SendAreaTriggerMessage("|cff00ff00Bag Opened!|r")
+        end
+    else
+        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found for your level. Bag not consumed.")
+    end
+
     if entry then
         -- 2. Only consume the bag if we found gear to give
         if player:HasItem(CONFIG.ITEM_ID_BAG) then
