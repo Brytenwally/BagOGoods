@@ -140,24 +140,39 @@ end
 -- THE HANDLERS
 -- ============================================================================
 
-local function DoTheBagLoot(eventId, delay, calls, player)
-    if not player or not player:IsInWorld() then return end
+local function DoTheBagLoot(event, delay, repeats, player)
+    -- 1. Initialize the table as local and empty to avoid NIL errors
+    local itemsToGive = {} 
+	if not player then return end
+    
+    -- 2. Determine how many items to roll for (Defaults to 1 if config is missing)
+    local rollCount = CONFIG.ITEMS_PER_OPEN or 1
 
-    -- 1. Try to find the item first
-    local entry = FindSingleItem(player)
-
-    if #itemsToGive > 0 then
-        if player:HasItem(CONFIG.ITEM_ID_BAG) then
-            player:RemoveItem(CONFIG.ITEM_ID_BAG, 1)
-            for _, entry in ipairs(itemsToGive) do
-                player:AddItem(entry, 1)
-                player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
-            end
-            player:SendAreaTriggerMessage("|cff00ff00Bag Opened!|r")
+    -- 3. Fill the table using your existing FindSingleItem logic
+    for i = 1, rollCount do
+        local entry = FindSingleItem(player) -- This is your spec-based lookup function
+        if entry then
+            table.insert(itemsToGive, entry)
         end
-    else
-        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found for your level. Bag not consumed.")
     end
+
+    -- 4. Process the results
+    if #itemsToGive > 0 then 
+        -- Player successfully "unboxed" items, consume the bag
+        player:RemoveItem(CONFIG.ITEM_ID_BAG, 1)
+
+        for i = 1, #itemsToGive do
+            local entry = itemsToGive[i]
+            player:AddItem(entry, 1)
+            player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
+        end
+        
+        player:SendAreaTriggerMessage("|cff00ff00Bag Opened!|r")
+    else
+        -- 5. Safety Fallback: If no items were found, don't take the bag
+        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found for your level/spec. Bag was not consumed.")
+    end
+end
 
     if entry then
         -- 2. Only consume the bag if we found gear to give
