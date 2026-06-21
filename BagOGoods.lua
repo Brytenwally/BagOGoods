@@ -61,7 +61,11 @@ local function GetSenseSpec(player)
     end
     return "DPS_STR"
 end
-
+local function OnPlayerLevelUp(event, player, oldLevel)
+    -- Award the bag on level up
+    player:AddItem(CONFIG.ITEM_ID_BAG, 1)
+    player:SendBroadcastMessage("Congratulations on reaching level " .. player:GetLevel() .. "! A Bag O' Goods has been added to your inventory.")
+end
 local function FindSingleItem(player)
     local spec = GetSenseSpec(player)
     local class = player:GetClass()
@@ -120,7 +124,7 @@ local function FindSingleItem(player)
 
         local query = string.format([[
             SELECT entry FROM item_template WHERE RequiredLevel <= %d AND RequiredLevel >= %d
-            AND ItemLevel <= %d AND Quality >= %d AND Quality <= %d AND (AllowableClass & %d OR AllowableClass = -1)
+            AND ItemLevel <= %d AND Quality >= %d AND Quality <= %d AND (AllowableClass & %d OR AllowableClass = -1) AND entry >= 91000
             AND 35 NOT IN (stat_type1, stat_type2, stat_type3, stat_type4, stat_type5, stat_type6, stat_type7, stat_type8, stat_type9, stat_type10)
             %s ORDER BY ItemLevel DESC, Quality DESC LIMIT %d
         ]], pLevel, math.max(1, pLevel - CONFIG.LEVEL_RANGE), targetIlvl, CONFIG.MIN_QUALITY, effectiveMaxQuality, player:GetClassMask(), filter, CONFIG.RANDOM_POOL_SIZE)
@@ -141,72 +145,55 @@ end
 -- ============================================================================
 
 local function DoTheBagLoot(event, delay, repeats, player)
-    -- 1. Initialize the table as local and empty to avoid NIL errors
-    local itemsToGive = {} 
-	if not player then return end
+    if not player then return end
     
-    -- 2. Determine how many items to roll for (Defaults to 1 if config is missing)
     local rollCount = CONFIG.ITEMS_PER_OPEN or 1
+    local itemsToGive = {} 
 
-    -- 3. Fill the table using your existing FindSingleItem logic
     for i = 1, rollCount do
-        local entry = FindSingleItem(player) -- This is your spec-based lookup function
+        local entry = FindSingleItem(player)
         if entry then
             table.insert(itemsToGive, entry)
         end
     end
 
-    -- 4. Process the results
     if #itemsToGive > 0 then 
-        -- Player successfully "unboxed" items, consume the bag
-        player:RemoveItem(CONFIG.ITEM_ID_BAG, 1)
-
-        for i = 1, #itemsToGive do
-            local entry = itemsToGive[i]
-            player:AddItem(entry, 1)
-            player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
-        end
-        
-        player:SendAreaTriggerMessage("|cff00ff00Bag Opened!|r")
-    else
-        -- 5. Safety Fallback: If no items were found, don't take the bag
-        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found for your level/spec. Bag was not consumed.")
-    end
-end
-
-    if entry then
-        -- 2. Only consume the bag if we found gear to give
         if player:HasItem(CONFIG.ITEM_ID_BAG) then
             player:RemoveItem(CONFIG.ITEM_ID_BAG, 1)
-            player:AddItem(entry, 1)
-            player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
+            for i = 1, #itemsToGive do
+                local entry = itemsToGive[i]
+                player:AddItem(entry, 1)
+                player:SendBroadcastMessage("You found: " .. GetItemLink(entry))
+            end
             player:SendAreaTriggerMessage("|cff00ff00Bag Opened!|r")
         end
     else
-        -- 3. Refund message if database lookup fails
-        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found for your level. Bag not consumed.")
+        player:SendBroadcastMessage("|cffff0000Error:|r No suitable items found. Bag not consumed.")
     end
 end
 
 local function OnSpellCast(event, player, spell, skipCheck)
     if spell and spell:GetEntry() == CONFIG.SPELL_ID_OPEN then
-        -- Only register the reward event if player actually has the bag
         if player:HasItem(CONFIG.ITEM_ID_BAG) then
             player:RegisterEvent(DoTheBagLoot, 150, 1)
         end
     end
 end
 
+-- New function for Level Up Reward
+local function OnPlayerLevelUp(event, player, oldLevel)
+    player:AddItem(CONFIG.ITEM_ID_BAG, 1)
+    player:SendBroadcastMessage("Congratulations! A Bag O' Goods has been added to your inventory.")
+end
+
 local function OnChat(event, player, msg, type, lang)
-    if msg == "bagtest" then 
-        if CONFIG.ENABLE_CHAT_COMMAND then
-            local entry = FindSingleItem(player)
-            if entry then 
-                player:AddItem(entry, 1) 
-                player:SendBroadcastMessage("Test Drop: " .. GetItemLink(entry))
-            else
-                player:SendBroadcastMessage("Test Failed: No item found for your spec.")
-            end
+    if msg == "bagtest" and CONFIG.ENABLE_CHAT_COMMAND then 
+        local entry = FindSingleItem(player)
+        if entry then 
+            player:AddItem(entry, 1) 
+            player:SendBroadcastMessage("Test Drop: " .. GetItemLink(entry))
+        else
+            player:SendBroadcastMessage("Test Failed: No item found for your spec.")
         end
         return false 
     end
@@ -216,6 +203,7 @@ end
 -- REGISTRATION
 -- ============================================================================
 RegisterPlayerEvent(5, OnSpellCast)
+RegisterPlayerEvent(13, OnPlayerLevelUp) -- Level Up Event
 RegisterPlayerEvent(18, OnChat)
 
 print(">> Bag o' Goods: Corrected Script Loaded.")
