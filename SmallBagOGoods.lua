@@ -10,7 +10,7 @@ local SMALL_BAG_CONFIG = {
     MIN_QUALITY         = 2,
     MAX_QUALITY         = 3,
     LEVEL_RANGE         = 15,
-    RANDOM_POOL_SIZE    = 15,
+    RANDOM_POOL_SIZE    = 40,
     STARTING_ENTRY_ID   = 0,
     ENABLE_CHAT_COMMAND = true,
     VERBOSE_LOGGING     = true,
@@ -260,11 +260,23 @@ local function OnSmallBagCast(event, player, spell, skipCheck)
     end
 end
 
+-- NEW FUNCTION: Triggered by the bot to automatically open the bag
+local function BotCastOpenBag(eventId, delay, calls, player)
+    if player and player:IsInWorld() and player:HasItem(SMALL_BAG_CONFIG.ITEM_ID_BAG) then
+        player:CastSpell(player, SMALL_BAG_CONFIG.SPELL_ID_OPEN, true)
+    end
+end
+
 local function OnQuestComplete_SmallBag(event, player, quest)
     if player:GetLevel() >= SMALL_BAG_CONFIG.MIN_LEVEL and player:GetLevel() <= SMALL_BAG_CONFIG.MAX_LEVEL then
         if math.random(1, 100) <= SMALL_BAG_CONFIG.REWARD_CHANCE then
             player:AddItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
             player:SendAreaTriggerMessage("Bonus: Smaller Bag o' Goods!")
+            
+            -- NEW CHECK: If the player is a bot, register the event to cast the spell 500ms later
+            if player:IsBot() then
+                player:RegisterEvent(BotCastOpenBag, 500, 1)
+            end
         end
     end
 end
