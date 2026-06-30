@@ -9,6 +9,7 @@ local CONFIG = {
     -- [REWARD CHANCES (1-100)]
     REWARD_CHANCE_QUEST = 100,    -- Chance to get a bag upon Quest Completion.
     REWARD_CHANCE_BG    = 100,   -- Chance to get a bag upon winning a Battleground.
+	REWARD_CHANCE_LEVELUP = 100,   -- Chance to get a bag upon Level Up.
 
     -- [LOOT QUALITY]
     MIN_QUALITY         = 2,     -- Minimum quality of gear the bag will search for.
@@ -27,7 +28,7 @@ local CONFIG = {
     
     -- [VARIETY SETTINGS]
     LEVEL_RANGE         = 10,
-    RANDOM_POOL_SIZE    = 10,     -- Picks 1 item from the top X highest item level matches.
+    RANDOM_POOL_SIZE    = 30,     -- Picks 1 item from the top X highest item level matches.
     
     -- [POWER LEVELING / SCALING]
     USE_AVG_ILVL_BOOST  = true,
@@ -246,11 +247,13 @@ local function OnSpellCast(event, player, spell, skipCheck)
 end
 
 local function OnPlayerLevelUp(event, player, oldLevel)
-    player:AddItem(CONFIG.ITEM_ID_BAG, 1)
-    player:SendBroadcastMessage("Congratulations! A Bag O' Goods has been added to your inventory.")
-    
-    if player:IsBot() then
-        player:RegisterEvent(BotCastOpenBag, 500, 1)
+    if math.random(1, 100) <= CONFIG.REWARD_CHANCE_LEVELUP then
+        player:AddItem(CONFIG.ITEM_ID_BAG, 1)
+        player:SendBroadcastMessage("Congratulations! A Bag O' Goods has been added to your inventory.")
+        
+        if player:IsBot() then
+            player:RegisterEvent(BotCastOpenBag, 500, 1)
+        end
     end
 end
 
