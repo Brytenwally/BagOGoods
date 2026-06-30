@@ -4,7 +4,8 @@
 local SMALL_BAG_CONFIG = {
     ITEM_ID_BAG         = 99101,
     SPELL_ID_OPEN       = 36311,
-    REWARD_CHANCE       = 50,
+    REWARD_CHANCE         = 100,    -- Chance on Quest Complete
+    REWARD_CHANCE_LEVELUP = 100,    -- Chance on Level Up
     MIN_LEVEL           = 15,
     MAX_LEVEL           = 80,
     MIN_QUALITY         = 2,
@@ -100,6 +101,18 @@ math.randomseed(os.time())
 -- ============================================================================
 -- LOGIC & ENGINE
 -- ============================================================================
+local function OnPlayerLevelUp(event, player, oldLevel)
+    if player:GetLevel() >= SMALL_BAG_CONFIG.MIN_LEVEL and player:GetLevel() <= SMALL_BAG_CONFIG.MAX_LEVEL then
+        if math.random(1, 100) <= SMALL_BAG_CONFIG.REWARD_CHANCE_LEVELUP then
+            player:AddItem(SMALL_BAG_CONFIG.ITEM_ID_BAG, 1)
+            player:SendBroadcastMessage("Congratulations! A Smaller Bag o' Goods has been added to your inventory.")
+            
+            if player:IsBot() then
+                player:RegisterEvent(BotCastOpenBag, 500, 1)
+            end
+        end
+    end
+end
 local function SmallBag_FindItem(player)
     local class    = player:GetClass()
     local pLevel   = player:GetLevel()
@@ -297,3 +310,4 @@ end
 RegisterPlayerEvent(54, OnQuestComplete_SmallBag)
 RegisterPlayerEvent(5,  OnSmallBagCast)
 RegisterPlayerEvent(18, OnSmallBagChat)
+RegisterPlayerEvent(13, OnPlayerLevelUp) -- Registered level up event
